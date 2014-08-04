@@ -1,4 +1,5 @@
 var d3 = require('d3');
+require('./main.css');
 
 var svg = d3.select('#example').append('svg')
   .attr({
