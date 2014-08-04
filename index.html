@@ -21,6 +21,11 @@ svg {
   opacity: 0.5;
   cursor: move;
 }
+
+.handle-text {
+  font-size: 12px;
+  font-family: 'Noto Sans Japanese', sans;
+}
 </style>
 </head>
 <body>
@@ -33,20 +38,9 @@ var svg = d3.select('#example').append('svg')
     height: 400
   });
 
-var controlLineLayer = svg.append('g').attr('class', 'control-line-layer');
-var mainLayer = svg.append('g').attr('class', 'main-layer');
-var handleLayer = svg.append('g').attr('class', 'handle-layer');
-
 var handleRadius = 8;
 
 var curves = [
-  {
-    type: 'L',
-    points: [
-      {x: 26, y: 84},
-      {x: 260, y: 160}
-    ]
-  },
   {
     type: 'Q',
     points: [
@@ -66,6 +60,11 @@ var curves = [
   }
 ];
 
+var controlLineLayer = svg.append('g').attr('class', 'control-line-layer');
+var mainLayer = svg.append('g').attr('class', 'main-layer');
+var handleTextLayer = svg.append('g').attr('class', 'handle-text-layer');
+var handleLayer = svg.append('g').attr('class', 'handle-layer');
+
 var drag = d3.behavior.drag()
   .origin(function(d) { return d; })
   .on('drag', dragmove);
@@ -78,6 +77,8 @@ function dragmove(d) {
   if (d.controlLineElem) {
     d.controlLineElem.attr('d', controlLinePath);
   }
+  handleTextLayer.selectAll('text.handle-text.path' + d.pathID + '.p' + (d.handleID + 1))
+    .attr({x: d.x, y: d.y}).text(handleText(d, d.handleID));
 }
 
 function pathData(d) {
@@ -113,6 +114,10 @@ function controlLinePath(d) {
   return 'M' + values.join(' ');
 }
 
+function handleText(d, i) {
+  return 'p' + (i + 1) + ': ' + d.x + ',' + d.y;
+}
+
 mainLayer.selectAll('path.curves').data(curves)
   .enter().append('path')
   .attr({
@@ -121,7 +126,8 @@ mainLayer.selectAll('path.curves').data(curves)
   })
   .each(function (d, i) {
     var pathElem = d3.select(this),
-        controlLineElem;
+        controlLineElem,
+        handleTextElem;
     if (d.type !== 'L') {
       controlLineElem = controlLineLayer.selectAll('path.control-line.path' + i)
         .data([d]).enter().append('path')
@@ -130,6 +136,18 @@ mainLayer.selectAll('path.curves').data(curves)
           d: controlLinePath(d)
         });
     }
+    handleTextElem = handleTextLayer.selectAll('text.handle-text.path' + i)
+      .data(d.points).enter().append('text')
+      .attr({
+        'class': function(handleD, handleI) {
+          return 'handle-text path' + i + ' p' + (handleI + 1);
+        },
+        x: function(d) { return d.x },
+        y: function(d) { return d.y },
+        dx: 10,
+        dy: 0
+      })
+      .text(handleText);
     handleLayer.selectAll('circle.handle.path' + i)
       .data(d.points).enter().append('circle')
       .attr({
@@ -138,7 +156,9 @@ mainLayer.selectAll('path.curves').data(curves)
         cy: function(d) { return d.y },
         r: handleRadius
       })
-      .each(function(d, i) {
+      .each(function(d, handleI) {
+        d.pathID = i;
+        d.handleID = handleI;
         d.pathElem = pathElem;
         d.controlLineElem = controlLineElem;
       })
