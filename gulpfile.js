@@ -1,6 +1,6 @@
-// This gulpfile.js is copied from
-// https://raw.githubusercontent.com/gunta/webpack-samples-1pixel/master/06-production/gulpfile.js
-// Thanks!
+// This gulpfile.js is based on
+// https://raw.githubusercontent.com/gunta/webpack-samples-1pixel/b6d3b0c48355e0a8ab3a9a52c5692fec2527bf78/06-production/gulpfile.js
+// My modification is released under MIT License.
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var webpack = require('webpack');

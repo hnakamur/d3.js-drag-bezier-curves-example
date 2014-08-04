@@ -84,7 +84,7 @@ function controlLinePath(d) {
 }
 
 function handleText(d, i) {
-  return 'p' + (i + 1) + ': ' + d.x + ',' + d.y;
+  return 'p' + (i + 1) + ': ' + d.x + '/' + d.y;
 }
 
 mainLayer.selectAll('path.curves').data(curves)
