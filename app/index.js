@@ -1,5 +1,6 @@
 var d3 = require('d3');
 require('./main.css');
+var kldIntersections = require('kld-intersections');
 
 var svg = d3.select('#example').append('svg')
   .attr({
@@ -8,6 +9,7 @@ var svg = d3.select('#example').append('svg')
   });
 
 var handleRadius = 8;
+var intersectionRadius = 4;
 
 var curves = [
   {
@@ -31,6 +33,7 @@ var curves = [
 
 var controlLineLayer = svg.append('g').attr('class', 'control-line-layer');
 var mainLayer = svg.append('g').attr('class', 'main-layer');
+var intersectionsLayer = svg.append('g').attr('class', 'intersections-layer');
 var handleTextLayer = svg.append('g').attr('class', 'handle-text-layer');
 var handleLayer = svg.append('g').attr('class', 'handle-layer');
 
@@ -48,6 +51,8 @@ function dragmove(d) {
   }
   handleTextLayer.selectAll('text.handle-text.path' + d.pathID + '.p' + (d.handleID + 1))
     .attr({x: d.x, y: d.y}).text(handleText(d, d.handleID));
+
+  updateIntersections();
 }
 
 function pathData(d) {
@@ -133,3 +138,41 @@ mainLayer.selectAll('path.curves').data(curves)
       })
       .call(drag);
   });
+
+function calcIntersections() {
+  var ap = curves[0].points,
+      bp = curves[1].points;
+  return kldIntersections.Intersection.intersectBezier2Bezier3(
+    new kldIntersections.Point2D(ap[0].x, ap[0].y),
+    new kldIntersections.Point2D(ap[1].x, ap[1].y),
+    new kldIntersections.Point2D(ap[2].x, ap[2].y),
+    new kldIntersections.Point2D(bp[0].x, bp[0].y),
+    new kldIntersections.Point2D(bp[1].x, bp[1].y),
+    new kldIntersections.Point2D(bp[2].x, bp[2].y),
+    new kldIntersections.Point2D(bp[3].x, bp[3].y)
+  );
+}
+function updateIntersections() {
+  var intersections,
+      circles;
+  intersections = calcIntersections();
+  console.log('intersections points', JSON.stringify(intersections.points));
+  circles = intersectionsLayer.selectAll('circle.intersections').data(intersections.points);
+  circles
+    .attr({
+      cx: function(d) { return d.x },
+      cy: function(d) { return d.y }
+    });
+  circles.enter()
+    .append('circle')
+    .attr({
+      'class': 'intersections',
+      cx: function(d) { return d.x },
+      cy: function(d) { return d.y },
+      r: intersectionRadius
+    });
+  circles.exit()
+    .remove();
+}
+
+updateIntersections();

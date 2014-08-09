@@ -22,3 +22,8 @@ svg {
   font-size: 12px;
   font-family: 'Noto Sans Japanese', sans;
 }
+
+.intersections {
+  fill: blue;
+  opacity: 0.5;
+}
