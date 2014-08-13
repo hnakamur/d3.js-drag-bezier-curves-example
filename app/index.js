@@ -4,8 +4,8 @@ var kldIntersections = require('kld-intersections');
 
 var svg = d3.select('#example').append('svg')
   .attr({
-    width: 400,
-    height: 400
+    width: 1000,
+    height: 800
   });
 
 var handleRadius = 8;
@@ -13,20 +13,21 @@ var intersectionRadius = 4;
 
 var curves = [
   {
-    type: 'Q',
+    type: 'C',
     points: [
-      {x: 25, y: 150},
-      {x: 180, y: 30},
-      {x: 320, y: 254}
+      {x: 315, y: 52},
+      {x: 29, y: 321},
+      {x: 367, y: 281},
+      {x: 293, y: 45}
     ]
   },
   {
     type: 'C',
     points: [
-      {x: 150, y: 125},
-      {x: 40, y: 30},
-      {x: 240, y: 120},
-      {x: 145, y: 200}
+      {x: 194, y: 95},
+      {x: 555, y: 261},
+      {x: 30, y: 88},
+      {x: 317, y: 114}
     ]
   }
 ];
@@ -140,17 +141,32 @@ mainLayer.selectAll('path.curves').data(curves)
   });
 
 function calcIntersections() {
-  var ap = curves[0].points,
+  var at = curves[0].type,
+      bt = curves[1].type,
+      ap = curves[0].points,
       bp = curves[1].points;
-  return kldIntersections.Intersection.intersectBezier2Bezier3(
-    new kldIntersections.Point2D(ap[0].x, ap[0].y),
-    new kldIntersections.Point2D(ap[1].x, ap[1].y),
-    new kldIntersections.Point2D(ap[2].x, ap[2].y),
-    new kldIntersections.Point2D(bp[0].x, bp[0].y),
-    new kldIntersections.Point2D(bp[1].x, bp[1].y),
-    new kldIntersections.Point2D(bp[2].x, bp[2].y),
-    new kldIntersections.Point2D(bp[3].x, bp[3].y)
-  );
+  if (at === 'Q' && bt === 'C') {
+    return kldIntersections.Intersection.intersectBezier2Bezier3(
+      new kldIntersections.Point2D(ap[0].x, ap[0].y),
+      new kldIntersections.Point2D(ap[1].x, ap[1].y),
+      new kldIntersections.Point2D(ap[2].x, ap[2].y),
+      new kldIntersections.Point2D(bp[0].x, bp[0].y),
+      new kldIntersections.Point2D(bp[1].x, bp[1].y),
+      new kldIntersections.Point2D(bp[2].x, bp[2].y),
+      new kldIntersections.Point2D(bp[3].x, bp[3].y)
+    );
+  } else if (at === 'C' && bt === 'C') {
+    return kldIntersections.Intersection.intersectBezier3Bezier3(
+      new kldIntersections.Point2D(ap[0].x, ap[0].y),
+      new kldIntersections.Point2D(ap[1].x, ap[1].y),
+      new kldIntersections.Point2D(ap[2].x, ap[2].y),
+      new kldIntersections.Point2D(ap[3].x, ap[3].y),
+      new kldIntersections.Point2D(bp[0].x, bp[0].y),
+      new kldIntersections.Point2D(bp[1].x, bp[1].y),
+      new kldIntersections.Point2D(bp[2].x, bp[2].y),
+      new kldIntersections.Point2D(bp[3].x, bp[3].y)
+    );
+  }
 }
 function updateIntersections() {
   var intersections,
