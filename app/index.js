@@ -1,6 +1,6 @@
 var d3 = require('d3');
 require('./main.css');
-var kldIntersections = require('kld-intersections');
+var kldIntersections = require('../lib/kld-intersections');
 
 var svg = d3.select('#example').append('svg')
   .attr({
