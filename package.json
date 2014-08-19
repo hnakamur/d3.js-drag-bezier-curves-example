@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/hnakamur/d3.js-drag-bezier-curves-example",
   "dependencies": {
+    "complex-js": "^1.0.15",
     "css-loader": "^0.7.0",
     "d3": "^3.4.11",
     "gulp": "^3.8.7",
