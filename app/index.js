@@ -152,8 +152,7 @@ function createBoundingBoxes() {
 
   var points = [];
   curves.forEach(function(d) {
-    var params = d.tangentParameters;
-    var ts = params.xt.concat(params.yt);
+    var ts = d.tangentParameters;
     ts.forEach(function(t) {
       var curve = BezierCurve.fromPointArray(d.points);
       points.push(curve.getPointAt(t));
