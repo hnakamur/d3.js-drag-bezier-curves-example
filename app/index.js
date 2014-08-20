@@ -1,5 +1,6 @@
 var d3 = require('d3');
 require('./main.css');
+var BezierCurve = require('../lib/bezier-curve');
 
 var svg = d3.select('#example').append('svg')
   .attr({
@@ -8,6 +9,7 @@ var svg = d3.select('#example').append('svg')
   });
 
 var handleRadius = 8;
+var tangentPointRadius = 4;
 
 var curves = [
   {
@@ -30,6 +32,7 @@ var curves = [
 ];
 
 var controlLineLayer = svg.append('g').attr('class', 'control-line-layer');
+var boundingBoxLayer = svg.append('g').attr('class', 'bounding-box-layer');
 var mainLayer = svg.append('g').attr('class', 'main-layer');
 var handleTextLayer = svg.append('g').attr('class', 'handle-text-layer');
 var handleLayer = svg.append('g').attr('class', 'handle-layer');
@@ -48,6 +51,8 @@ function dragmove(d) {
   }
   handleTextLayer.selectAll('text.handle-text.path' + d.pathID + '.p' + (d.handleID + 1))
     .attr({x: d.x, y: d.y}).text(handleText(d, d.handleID));
+
+  createBoundingBoxes();
 }
 
 function pathData(d) {
@@ -132,4 +137,47 @@ mainLayer.selectAll('path.curves').data(curves)
         d.controlLineElem = controlLineElem;
       })
       .call(drag);
+
   });
+
+function calcTangentParameters(d) {
+  var curve = BezierCurve.fromPointArray(d.points);
+  var deriv = curve.getDerivative();
+  d.tangentParameters= deriv.getTangentParameters();
+}
+
+function createBoundingBoxes() {
+  calcTangentParameters(curves[0]);
+  calcTangentParameters(curves[1]);
+
+  var points = [];
+  curves.forEach(function(d) {
+    var params = d.tangentParameters;
+    var ts = params.xt.concat(params.yt);
+    ts.forEach(function(t) {
+      var curve = BezierCurve.fromPointArray(d.points);
+      points.push(curve.getPointAt(t));
+    });
+  });
+
+  var elems = boundingBoxLayer.selectAll('circle.tangent-point').data(points);
+  elems
+    .attr({
+      'class': 'handle tangent-point',
+      cx: function(d) { return d.x },
+      cy: function(d) { return d.y },
+      r: tangentPointRadius
+    });
+
+  elems.enter().append('circle')
+    .attr({
+      'class': 'handle tangent-point',
+      cx: function(d) { return d.x },
+      cy: function(d) { return d.y },
+      r: tangentPointRadius
+    });
+
+  elems.exit().remove();
+}
+
+createBoundingBoxes();
