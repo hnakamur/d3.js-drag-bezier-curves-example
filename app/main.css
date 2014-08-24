@@ -12,8 +12,14 @@ svg {
   fill: none;
 }
 
-.bbox {
-  stroke: red;
+.bbox0 {
+  stroke: blue;
+  fill: none;
+  opacity: 0.5;
+}
+
+.bbox1 {
+  stroke: orange;
   fill: none;
   opacity: 0.5;
 }

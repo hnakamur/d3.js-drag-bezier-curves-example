@@ -159,13 +159,13 @@ function createBoundingBoxes() {
   calcTangentParameters(curves[0]);
   calcTangentParameters(curves[1]);
 
-  var divCount = 2;
-  var boxes = [];
-  curves.forEach(function(d) {
+  var divCount = 1;
+  curves.forEach(function(d, di) {
+    var boxes = [];
     var curve = BezierCurve.fromPointArray(d.points);
     var ts = [].concat(d.tangentParameters);
     var i = 1;
-    var n, tim1, ti, j, ujm1, uj, tjm1, tj, p0, p1;
+    var n, tim1, ti, j, ujm1, uj, tjm1, tj, p0, p1, boxElems;
     ts.unshift(0);
     ts.push(1);
     n = ts.length;
@@ -182,27 +182,27 @@ function createBoundingBoxes() {
         boxes.push(getBoxByTwoPoints(p0, p1));
       }
     }
+
+    boxElems = boundingBoxLayer.selectAll('rect.bbox' + di).data(boxes);
+    boxElems
+      .attr({
+        x: function(d) { return d.x },
+        y: function(d) { return d.y },
+        width: function(d) { return d.width },
+        height: function(d) { return d.height }
+      });
+
+    boxElems.enter().append('rect')
+      .attr({
+        'class': 'bbox' + di,
+        x: function(d) { return d.x },
+        y: function(d) { return d.y },
+        width: function(d) { return d.width },
+        height: function(d) { return d.height }
+      });
+
+    boxElems.exit().remove();
   });
-
-  var boxElems = boundingBoxLayer.selectAll('rect.bbox').data(boxes);
-  boxElems
-    .attr({
-      x: function(d) { return d.x },
-      y: function(d) { return d.y },
-      width: function(d) { return d.width },
-      height: function(d) { return d.height }
-    });
-
-  boxElems.enter().append('rect')
-    .attr({
-      'class': 'bbox',
-      x: function(d) { return d.x },
-      y: function(d) { return d.y },
-      width: function(d) { return d.width },
-      height: function(d) { return d.height }
-    });
-
-  boxElems.exit().remove();
 
   var points = [];
   curves.forEach(function(d) {
