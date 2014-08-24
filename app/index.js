@@ -1,6 +1,7 @@
 var d3 = require('d3');
 require('./main.css');
 var BezierCurve = require('../lib/bezier-curve');
+var Rect = require('../lib/rect');
 
 var svg = d3.select('#example').append('svg')
   .attr({
@@ -146,13 +147,28 @@ function calcTangentParameters(d) {
   d.tangentParameters= deriv.getTangentParameters();
 }
 
-function getBoxByTwoPoints(p0, p1) {
-  return {
-    x: Math.min(p0.x, p1.x),
-    y: Math.min(p0.y, p1.y),
-    width: Math.abs(p1.x - p0.x),
-    height: Math.abs(p1.y - p0.y)
-  };
+function BezierCurveSegment(curve, t0, t1) {
+  this.curve = curve;
+  this.t0 = t0;
+  this.t1 = t1;
+  this.p0 = curve.getPointAt(t0);
+  this.p1 = curve.getPointAt(t1);
+  this.bbox = Rect.fromTwoPoints(this.p0, this.p1);
+}
+
+function getInitialSegments(curve) {
+  var deriv = curve.getDerivative();
+  var ts = [].concat(0, deriv.getTangentParameters(), 1);
+  var i = 1;
+  var n = ts.length;
+  var segments = [];
+  for (; i < n; i++) {
+    segments.push(new BezierCurveSegment(curve, ts[i - 1], ts[i]));
+  }
+  return segments;
+}
+
+function intersection(curve1, curve2) {
 }
 
 function createBoundingBoxes() {
@@ -161,44 +177,25 @@ function createBoundingBoxes() {
 
   var divCount = 1;
   curves.forEach(function(d, di) {
-    var boxes = [];
     var curve = BezierCurve.fromPointArray(d.points);
-    var ts = [].concat(d.tangentParameters);
-    var i = 1;
-    var n, tim1, ti, j, ujm1, uj, tjm1, tj, p0, p1, boxElems;
-    ts.unshift(0);
-    ts.push(1);
-    n = ts.length;
-    for (; i < n; i++) {
-      tim1 = ts[i - 1];
-      ti = ts[i];
-      for (j = 1; j <= divCount; j++) {
-        ujm1 = (j - 1) / divCount;
-        uj = j / divCount;
-        tjm1 = (1 - ujm1) * tim1 + ujm1 * ti;
-        tj = (1 - uj) * tim1 + uj * ti;
-        p0 = curve.getPointAt(tjm1);
-        p1 = curve.getPointAt(tj);
-        boxes.push(getBoxByTwoPoints(p0, p1));
-      }
-    }
+    var segments = getInitialSegments(curve);
 
-    boxElems = boundingBoxLayer.selectAll('rect.bbox' + di).data(boxes);
+    boxElems = boundingBoxLayer.selectAll('rect.bbox' + di).data(segments);
     boxElems
       .attr({
-        x: function(d) { return d.x },
-        y: function(d) { return d.y },
-        width: function(d) { return d.width },
-        height: function(d) { return d.height }
+        x: function(d) { return d.bbox.x },
+        y: function(d) { return d.bbox.y },
+        width: function(d) { return d.bbox.width },
+        height: function(d) { return d.bbox.height }
       });
 
     boxElems.enter().append('rect')
       .attr({
         'class': 'bbox' + di,
-        x: function(d) { return d.x },
-        y: function(d) { return d.y },
-        width: function(d) { return d.width },
-        height: function(d) { return d.height }
+        x: function(d) { return d.bbox.x },
+        y: function(d) { return d.bbox.y },
+        width: function(d) { return d.bbox.width },
+        height: function(d) { return d.bbox.height }
       });
 
     boxElems.exit().remove();
