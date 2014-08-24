@@ -231,7 +231,7 @@ function createBoundingBoxes() {
     var curve = BezierCurve.fromPointArray(d.points);
     return getInitialSegments(curve);
   });
-  for (var i = 0; i < 6; i ++) {
+  for (var i = 0; i < 4; i ++) {
     curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
     curvesSegments = curvesSegments.map(function(segments) {
       return divideSegments(segments);
