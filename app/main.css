@@ -14,12 +14,14 @@ svg {
 
 .bbox0 {
   stroke: blue;
+  stroke-width: 2;
   fill: none;
   opacity: 0.5;
 }
 
 .bbox1 {
   stroke: orange;
+  stroke-width: 2;
   fill: none;
   opacity: 0.5;
 }

@@ -171,16 +171,75 @@ function getInitialSegments(curve) {
 function intersection(curve1, curve2) {
 }
 
+function isAnyOverlaps(segment, otherSegments) {
+  var bbox = segment.bbox;
+  var n = otherSegments.length;
+  var i = 0;
+  for (; i < n; i++) {
+    if (bbox.overlaps(otherSegments[i].bbox)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function selectOverlappingSegments(curve0Segments, curve1Segments) {
+  var curve0OverlappingSegments = [];
+  var curve1OverlappingSegments = [];
+  curve0Segments.forEach(function(curve0Segment) {
+    if (isAnyOverlaps(curve0Segment, curve1Segments)) {
+      curve0OverlappingSegments.push(curve0Segment);
+    }
+  });
+  curve1Segments.forEach(function(curve1Segment) {
+    if (isAnyOverlaps(curve1Segment, curve0Segments)) {
+      curve1OverlappingSegments.push(curve1Segment);
+    }
+  });
+  return [curve0OverlappingSegments, curve1OverlappingSegments];
+}
+
+function divideSegment(segment) {
+  var curve = segment.curve;
+  var t0 = segment.t0;
+  var t1 = segment.t1;
+  var tm = (t0 + t1) / 2;
+  return [
+    new BezierCurveSegment(curve, t0, tm),
+    new BezierCurveSegment(curve, tm, t1)
+  ];
+}
+
+function divideSegments(segments) {
+  var dividedSegments = [];
+  var n = segments.length;
+  var i = 0;
+  var tmpSegments;
+  for (; i < n; i++) {
+    tmpSegments = divideSegment(segments[i]);
+    dividedSegments.push(tmpSegments[0]);
+    dividedSegments.push(tmpSegments[1]);
+  }
+  return dividedSegments;
+}
+
 function createBoundingBoxes() {
   calcTangentParameters(curves[0]);
   calcTangentParameters(curves[1]);
 
-  var divCount = 1;
-  curves.forEach(function(d, di) {
+  var curvesSegments = curves.map(function(d) {
     var curve = BezierCurve.fromPointArray(d.points);
-    var segments = getInitialSegments(curve);
-
-    boxElems = boundingBoxLayer.selectAll('rect.bbox' + di).data(segments);
+    return getInitialSegments(curve);
+  });
+  for (var i = 0; i < 6; i ++) {
+    curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
+    curvesSegments = curvesSegments.map(function(segments) {
+      return divideSegments(segments);
+    });
+  }
+  curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
+  curvesSegments.forEach(function(curveSegments, i) {
+    boxElems = boundingBoxLayer.selectAll('rect.bbox' + i).data(curveSegments);
     boxElems
       .attr({
         x: function(d) { return d.bbox.x },
@@ -191,7 +250,7 @@ function createBoundingBoxes() {
 
     boxElems.enter().append('rect')
       .attr({
-        'class': 'bbox' + di,
+        'class': 'bbox' + i,
         x: function(d) { return d.bbox.x },
         y: function(d) { return d.bbox.y },
         width: function(d) { return d.bbox.width },
