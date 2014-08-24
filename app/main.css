@@ -12,6 +12,18 @@ svg {
   fill: none;
 }
 
+.bbox {
+  stroke: red;
+  fill: none;
+  opacity: 0.5;
+}
+
+.tangent-point {
+  stroke: none;
+  fill: red;
+  opacity: 0.5;
+}
+
 .handle {
   fill: red;
   opacity: 0.5;

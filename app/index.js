@@ -146,15 +146,60 @@ function calcTangentParameters(d) {
   d.tangentParameters= deriv.getTangentParameters();
 }
 
+function getBoxByTwoPoints(p0, p1) {
+  return {
+    x: Math.min(p0.x, p1.x),
+    y: Math.min(p0.y, p1.y),
+    width: Math.abs(p1.x - p0.x),
+    height: Math.abs(p1.y - p0.y)
+  };
+}
+
 function createBoundingBoxes() {
   calcTangentParameters(curves[0]);
   calcTangentParameters(curves[1]);
 
+  var boxes = [];
+  curves.forEach(function(d) {
+    var curve = BezierCurve.fromPointArray(d.points);
+    var ts = [].concat(d.tangentParameters);
+    var i = 1;
+    var n;
+    ts.unshift(0);
+    ts.push(1);
+    n = ts.length;
+    for (; i < n; i++) {
+      var p0 = curve.getPointAt(ts[i - 1]);
+      var p1 = curve.getPointAt(ts[i]);
+      boxes.push(getBoxByTwoPoints(p0, p1));
+    }
+  });
+
+  var boxElems = boundingBoxLayer.selectAll('rect.bbox').data(boxes);
+  boxElems
+    .attr({
+      x: function(d) { return d.x },
+      y: function(d) { return d.y },
+      width: function(d) { return d.width },
+      height: function(d) { return d.height }
+    });
+
+  boxElems.enter().append('rect')
+    .attr({
+      'class': 'bbox',
+      x: function(d) { return d.x },
+      y: function(d) { return d.y },
+      width: function(d) { return d.width },
+      height: function(d) { return d.height }
+    });
+
+  boxElems.exit().remove();
+
   var points = [];
   curves.forEach(function(d) {
+    var curve = BezierCurve.fromPointArray(d.points);
     var ts = d.tangentParameters;
     ts.forEach(function(t) {
-      var curve = BezierCurve.fromPointArray(d.points);
       points.push(curve.getPointAt(t));
     });
   });
@@ -162,15 +207,13 @@ function createBoundingBoxes() {
   var elems = boundingBoxLayer.selectAll('circle.tangent-point').data(points);
   elems
     .attr({
-      'class': 'handle tangent-point',
       cx: function(d) { return d.x },
       cy: function(d) { return d.y },
-      r: tangentPointRadius
     });
 
   elems.enter().append('circle')
     .attr({
-      'class': 'handle tangent-point',
+      'class': 'tangent-point',
       cx: function(d) { return d.x },
       cy: function(d) { return d.y },
       r: tangentPointRadius
