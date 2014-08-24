@@ -159,19 +159,28 @@ function createBoundingBoxes() {
   calcTangentParameters(curves[0]);
   calcTangentParameters(curves[1]);
 
+  var divCount = 2;
   var boxes = [];
   curves.forEach(function(d) {
     var curve = BezierCurve.fromPointArray(d.points);
     var ts = [].concat(d.tangentParameters);
     var i = 1;
-    var n;
+    var n, tim1, ti, j, ujm1, uj, tjm1, tj, p0, p1;
     ts.unshift(0);
     ts.push(1);
     n = ts.length;
     for (; i < n; i++) {
-      var p0 = curve.getPointAt(ts[i - 1]);
-      var p1 = curve.getPointAt(ts[i]);
-      boxes.push(getBoxByTwoPoints(p0, p1));
+      tim1 = ts[i - 1];
+      ti = ts[i];
+      for (j = 1; j <= divCount; j++) {
+        ujm1 = (j - 1) / divCount;
+        uj = j / divCount;
+        tjm1 = (1 - ujm1) * tim1 + ujm1 * ti;
+        tj = (1 - uj) * tim1 + uj * ti;
+        p0 = curve.getPointAt(tjm1);
+        p1 = curve.getPointAt(tj);
+        boxes.push(getBoxByTwoPoints(p0, p1));
+      }
     }
   });
 
