@@ -26,6 +26,12 @@ svg {
   opacity: 0.5;
 }
 
+.intersection {
+  stroke: none;
+  fill: blue;
+  opacity: 0.5;
+}
+
 .tangent-point {
   stroke: none;
   fill: red;
