@@ -162,58 +162,6 @@ function getInitialSegments(curve) {
   return segments;
 }
 
-function isAnyOverlaps(segment, otherSegments) {
-  var bbox = segment.bbox;
-  var n = otherSegments.length;
-  var i = 0;
-  for (; i < n; i++) {
-    if (bbox.overlaps(otherSegments[i].bbox)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function selectOverlappingSegments(curve0Segments, curve1Segments) {
-  var curve0OverlappingSegments = [];
-  var curve1OverlappingSegments = [];
-  curve0Segments.forEach(function(curve0Segment) {
-    if (isAnyOverlaps(curve0Segment, curve1Segments)) {
-      curve0OverlappingSegments.push(curve0Segment);
-    }
-  });
-  curve1Segments.forEach(function(curve1Segment) {
-    if (isAnyOverlaps(curve1Segment, curve0Segments)) {
-      curve1OverlappingSegments.push(curve1Segment);
-    }
-  });
-  return [curve0OverlappingSegments, curve1OverlappingSegments];
-}
-
-function divideSegment(segment) {
-  var curve = segment.curve;
-  var t0 = segment.t0;
-  var t1 = segment.t1;
-  var tm = (t0 + t1) / 2;
-  return [
-    new CurveSegment(curve, t0, tm),
-    new CurveSegment(curve, tm, t1)
-  ];
-}
-
-function divideSegments(segments) {
-  var dividedSegments = [];
-  var n = segments.length;
-  var i = 0;
-  var tmpSegments;
-  for (; i < n; i++) {
-    tmpSegments = divideSegment(segments[i]);
-    dividedSegments.push(tmpSegments[0]);
-    dividedSegments.push(tmpSegments[1]);
-  }
-  return dividedSegments;
-}
-
 function drawPoints(layer, points, cssClass, radius) {
   var elems = layer.selectAll('circle.' + cssClass).data(points);
   elems
@@ -255,12 +203,12 @@ function createBoundingBoxes() {
     return getInitialSegments(curve);
   });
   for (var i = 0; i < 5; i ++) {
-    curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
+    curvesSegments = CurveSegment.selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
     curvesSegments = curvesSegments.map(function(segments) {
-      return divideSegments(segments);
+      return CurveSegment.divideSegments(segments);
     });
   }
-  curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
+  curvesSegments = CurveSegment.selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
 
   pairs = CurveSegment.getBboxOverlappingPairs(curvesSegments[0], curvesSegments[1]);
   console.log('pairs', pairs);
