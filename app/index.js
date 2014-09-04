@@ -143,12 +143,6 @@ mainLayer.selectAll('path.curves').data(curves)
 
   });
 
-function calcTangentParameters(d) {
-  var curve = BezierCurve.fromPointArray(d.points);
-  var deriv = curve.getDerivative();
-  d.tangentParameters= deriv.getTangentParameters();
-}
-
 
 function getInitialSegments(curve) {
   var deriv = curve.getDerivative();
@@ -182,16 +176,11 @@ function drawPoints(layer, points, cssClass, radius) {
 }
 
 function createBoundingBoxes() {
-  var pairs;
-  var intersections = [];
-
-  calcTangentParameters(curves[0]);
-  calcTangentParameters(curves[1]);
-
   var points = [];
   curves.forEach(function(d) {
-    var curve = BezierCurve.fromPointArray(d.points);
-    var ts = d.tangentParameters;
+    var curve = BezierCurve.fromPoints(d.points);
+    var deriv = curve.getDerivative();
+    var ts = deriv.getTangentParameters();
     ts.forEach(function(t) {
       points.push(curve.getPointAt(t));
     });
@@ -199,12 +188,12 @@ function createBoundingBoxes() {
   drawPoints(intersectionLayer, points, 'tangent-point', tangentPointRadius);
 
   var curvesSegments = curves.map(function(d) {
-    var curve = BezierCurve.fromPointArray(d.points);
+    var curve = BezierCurve.fromPoints(d.points);
     return getInitialSegments(curve);
   });
 
   var intersectionsAndParameters = CurveSegment.getIntersectionsAndParameters(curvesSegments[0], curvesSegments[1]);
-  intersections = intersectionsAndParameters.map(function (intersectionAndParameters) {
+  var intersections = intersectionsAndParameters.map(function (intersectionAndParameters) {
     return intersectionAndParameters[0];
   });
   console.log('intersections', intersections);
