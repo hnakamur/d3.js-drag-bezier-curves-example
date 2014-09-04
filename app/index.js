@@ -202,21 +202,10 @@ function createBoundingBoxes() {
     var curve = BezierCurve.fromPointArray(d.points);
     return getInitialSegments(curve);
   });
-  for (var i = 0; i < 5; i ++) {
-    curvesSegments = CurveSegment.selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
-    curvesSegments = curvesSegments.map(function(segments) {
-      return CurveSegment.divideSegments(segments);
-    });
-  }
-  curvesSegments = CurveSegment.selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
 
-  pairs = CurveSegment.getBboxOverlappingPairs(curvesSegments[0], curvesSegments[1]);
-  console.log('pairs', pairs);
-  pairs.forEach(function(pair) {
-    var intersectionAndParams = CurveSegment.getIntersectionAndParametersAsLines(pair.seg0, pair.seg1);
-    if (intersectionAndParams !== null) {
-      intersections.push(intersectionAndParams[0]);
-    }
+  var intersectionsAndParameters = CurveSegment.getIntersectionsAndParameters(curvesSegments[0], curvesSegments[1]);
+  intersections = intersectionsAndParameters.map(function (intersectionAndParameters) {
+    return intersectionAndParameters[0];
   });
   console.log('intersections', intersections);
   drawPoints(intersectionLayer, intersections, 'intersection', intersectionRadius);
