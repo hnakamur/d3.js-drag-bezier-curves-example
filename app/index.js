@@ -145,8 +145,7 @@ mainLayer.selectAll('path.curves').data(curves)
 
 
 function getInitialSegments(curve) {
-  var deriv = curve.getDerivative();
-  var ts = [].concat(0, deriv.getTangentParameters(), 1);
+  var ts = [].concat(0, curve.getXYTangentParameters(), 1);
   var i = 1;
   var n = ts.length;
   var segments = [];
@@ -179,8 +178,7 @@ function createBoundingBoxes() {
   var points = [];
   curves.forEach(function(d) {
     var curve = BezierCurve.fromPoints(d.points);
-    var deriv = curve.getDerivative();
-    var ts = deriv.getTangentParameters();
+    var ts = curve.getXYTangentParameters();
     ts.forEach(function(t) {
       points.push(curve.getPointAt(t));
     });
