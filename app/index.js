@@ -143,18 +143,6 @@ mainLayer.selectAll('path.curves').data(curves)
 
   });
 
-
-function getInitialSegments(curve) {
-  var ts = [].concat(0, curve.getXYTangentParameters(), 1);
-  var i = 1;
-  var n = ts.length;
-  var segments = [];
-  for (; i < n; i++) {
-    segments.push(new CurveSegment(curve, ts[i - 1], ts[i]));
-  }
-  return segments;
-}
-
 function drawPoints(layer, points, cssClass, radius) {
   var elems = layer.selectAll('circle.' + cssClass).data(points);
   elems
@@ -187,7 +175,7 @@ function createBoundingBoxes() {
 
   var curvesSegments = curves.map(function(d) {
     var curve = BezierCurve.fromPoints(d.points);
-    return getInitialSegments(curve);
+    return CurveSegment.divideAtXYTangentPoints(curve);
   });
 
   var intersectionsAndParameters = CurveSegment.getIntersectionsAndParameters(curvesSegments[0], curvesSegments[1]);
