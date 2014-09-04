@@ -1,8 +1,7 @@
 var d3 = require('d3');
 require('./main.css');
 var BezierCurve = require('../lib/bezier-curve');
-var Rect = require('../lib/rect');
-var Line2D = require('../lib/line2d');
+var CurveSegment = require('../lib/curve-segment');
 
 var svg = d3.select('#example').append('svg')
   .attr({
@@ -150,38 +149,6 @@ function calcTangentParameters(d) {
   d.tangentParameters= deriv.getTangentParameters();
 }
 
-function BezierCurveSegment(curve, t0, t1) {
-  this.curve = curve;
-  this.t0 = t0;
-  this.t1 = t1;
-  this.p0 = curve.getPointAt(t0);
-  this.p1 = curve.getPointAt(t1);
-  this.bbox = Rect.fromTwoPoints(this.p0, this.p1);
-}
-
-BezierCurveSegment.getBboxOverlappingPairs = function(curve0Segments, curve1Segments) {
-  var pairs = [];
-  var n0 = curve0Segments.length;
-  var n1 = curve1Segments.length;
-  var i0, i1, seg0, seg1;
-  for (i0 = 0; i0 < n0; i0++) {
-    seg0 = curve0Segments[i0];
-    for (i1 = 0; i1 < n1; i1++) {
-      seg1 = curve1Segments[i1];
-      if (seg0.bbox.overlaps(seg1.bbox)) {
-        pairs.push({ seg0: seg0, seg1: seg1 });
-      }
-    }
-  }
-  return pairs;
-};
-
-BezierCurveSegment.getIntersectionAndParametersAsLines = function(curveSeg0, curveSeg1) {
-  var lines = [curveSeg0, curveSeg1].map(function (curveSeg) {
-    return new Line2D([curveSeg.p0, curveSeg.p1]);
-  });
-  return Line2D.getIntersectionAndParameters(lines[0], lines[1]);
-};
 
 function getInitialSegments(curve) {
   var deriv = curve.getDerivative();
@@ -190,7 +157,7 @@ function getInitialSegments(curve) {
   var n = ts.length;
   var segments = [];
   for (; i < n; i++) {
-    segments.push(new BezierCurveSegment(curve, ts[i - 1], ts[i]));
+    segments.push(new CurveSegment(curve, ts[i - 1], ts[i]));
   }
   return segments;
 }
@@ -229,8 +196,8 @@ function divideSegment(segment) {
   var t1 = segment.t1;
   var tm = (t0 + t1) / 2;
   return [
-    new BezierCurveSegment(curve, t0, tm),
-    new BezierCurveSegment(curve, tm, t1)
+    new CurveSegment(curve, t0, tm),
+    new CurveSegment(curve, tm, t1)
   ];
 }
 
@@ -295,10 +262,10 @@ function createBoundingBoxes() {
   }
   curvesSegments = selectOverlappingSegments(curvesSegments[0], curvesSegments[1]);
 
-  pairs = BezierCurveSegment.getBboxOverlappingPairs(curvesSegments[0], curvesSegments[1]);
+  pairs = CurveSegment.getBboxOverlappingPairs(curvesSegments[0], curvesSegments[1]);
   console.log('pairs', pairs);
   pairs.forEach(function(pair) {
-    var intersectionAndParams = BezierCurveSegment.getIntersectionAndParametersAsLines(pair.seg0, pair.seg1);
+    var intersectionAndParams = CurveSegment.getIntersectionAndParametersAsLines(pair.seg0, pair.seg1);
     if (intersectionAndParams !== null) {
       intersections.push(intersectionAndParams[0]);
     }
