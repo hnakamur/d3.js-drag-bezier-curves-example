@@ -11,44 +11,17 @@ var svg = d3.select('#example').append('svg')
   });
 
 var handleRadius = 8;
-var tangentPointRadius = 4;
+var lastHandleRadius = 30;
 var intersectionRadius = 4;
 
 var curves = [
-//  {
-//    type: 'C',
-//    points: [
-//      {x: 10, y: 100},
-//      {x: 90, y: 30},
-//      {x: 40, y: 140},
-//      {x: 220, y: 240}
-//    ]
-//  },
-//  {
-//    type: 'C',
-//    points: [
-//      {x: 5, y: 150},
-//      {x: 180, y: 20},
-//      {x: 80, y: 280},
-//      {x: 210, y: 190}
-//    ]
-//  }
-  {
-    type: 'A',
-    x1: 100, y1: 150,
-    rx: 25, ry: 100,
-    xAxisRotation: 30,
-    largeArcFlag: 1,
-    sweepFlag: 1,
-    x2: 150, y2: 150
-  },
   {
     type: 'C',
     points: [
-      {x: 5, y: 150},
-      {x: 180, y: 20},
-      {x: 80, y: 280},
-      {x: 210, y: 20}
+      {x: 120, y: 160},
+      {x: 35, y: 200},
+      {x: 220, y: 260},
+      {x: 220, y: 40}
     ]
   }
 ];
@@ -74,7 +47,7 @@ function dragmove(d) {
   handleTextLayer.selectAll('text.handle-text.path' + d.pathID + '.p' + (d.handleID + 1))
     .attr({x: d.x, y: d.y}).text(handleText(d, d.handleID));
 
-  createBoundingBoxes();
+  calculateIntersection();
 }
 
 function pathData(d) {
@@ -156,7 +129,7 @@ mainLayer.selectAll('path.curves').data(curves)
           'class': 'handle path' + i,
           cx: function(d) { return d.x },
           cy: function(d) { return d.y },
-          r: handleRadius
+          r: function(d, i) { return i < 3 ? handleRadius : lastHandleRadius; }
         })
         .each(function(d, handleI) {
           d.pathID = i;
@@ -187,35 +160,13 @@ function drawPoints(layer, points, cssClass, radius) {
   elems.exit().remove();
 }
 
-function createBoundingBoxes() {
+function calculateIntersection() {
   var points = [];
-  curves.forEach(function(d) {
-    var curve;
-    if (d.type === 'A') {
-      curve = EllipticArc.fromSvgPathParameters(
-        d.x1, d.y1, d.rx, d.ry, d.xAxisRotation,
-        d.largeArcFlag, d.sweepFlag, d.x2, d.y2
-      );
-    } else {
-      curve = BezierCurve.fromPoints(d.points);
-    }
-    var ts = curve.getXYTangentParameters();
-    ts.forEach(function(t) {
-      points.push(curve.getPointAtT(t));
-    });
-  });
-  drawPoints(intersectionLayer, points, 'tangent-point', tangentPointRadius);
 
-  var curvesSegments = curves.map(function(d) {
-    var curve;
-    if (d.type === 'A') {
-      curve = EllipticArc.fromSvgPathParameters(
-        d.x1, d.y1, d.rx, d.ry, d.xAxisRotation,
-        d.largeArcFlag, d.sweepFlag, d.x2, d.y2
-      );
-    } else {
-      curve = BezierCurve.fromPoints(d.points);
-    }
+  var d = curves[0].points[3];
+  var lastHandleCurve = new EllipticArc(d.x, d.y, lastHandleRadius, lastHandleRadius, 0, 0, 360);
+  var bezierCurve = BezierCurve.fromPoints(curves[0].points);
+  var curvesSegments = [bezierCurve, lastHandleCurve].map(function(curve) {
     return CurveSegment.divideAtXYTangentPoints(curve);
   });
 
@@ -227,4 +178,4 @@ function createBoundingBoxes() {
   drawPoints(intersectionLayer, intersections, 'intersection', intersectionRadius);
 }
 
-createBoundingBoxes();
+calculateIntersection();
