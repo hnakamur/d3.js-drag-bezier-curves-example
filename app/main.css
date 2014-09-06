@@ -3,8 +3,9 @@ svg {
 }
 
 .curves {
-  stroke: black;
+  stroke: yellow;
   fill: none;
+  opacity: 0.3;
 }
 
 .control-line {
@@ -47,4 +48,11 @@ svg {
 .handle-text {
   font-size: 12px;
   font-family: 'Noto Sans Japanese', sans;
+}
+
+.cut-curve {
+  stroke: purple;
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.5;
 }

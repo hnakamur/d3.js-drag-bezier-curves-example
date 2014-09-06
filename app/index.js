@@ -26,6 +26,24 @@ var curves = [
   }
 ];
 
+var defs = svg.append('defs');
+defs.append('marker')
+  .attr({
+    'id': 'arrowhead',
+    viewBox: '0 0 10 10',
+    'refX': 10,
+    'refY': 5,
+    'markerWidth': 10,
+    'markerHeight': 10,
+    'orient': 'auto'
+  })
+  .append('path')
+  .attr({
+    d: 'M10 5 0 10 0 8.7 6.8 5.5 0 5.5 0 4.5 6.8 4.5 0 1.3 0 0Z',
+    stroke: 'none',
+    fill: 'black'
+  });
+
 var controlLineLayer = svg.append('g').attr('class', 'control-line-layer');
 var mainLayer = svg.append('g').attr('class', 'main-layer');
 var intersectionLayer = svg.append('g').attr('class', 'intersection-layer');
@@ -160,9 +178,34 @@ function drawPoints(layer, points, cssClass, radius) {
   elems.exit().remove();
 }
 
-function calculateIntersection() {
-  var points = [];
+function convertBezierCurveToPath(curve) {
+  var xs = curve.xs;
+  var ys = curve.ys;
+  return 'M' +  xs[0] + ' ' + ys[0] +
+      'C' +  xs[1] + ' ' + ys[1] +
+      ' ' +  xs[2] + ' ' + ys[2] +
+      ' ' +  xs[3] + ' ' + ys[3];
+}
 
+function drawCutCurve(layer, curve, cssClass) {
+  var elems = layer.selectAll('path.' + cssClass).data([curve]);
+  elems
+    .attr({
+      d: convertBezierCurveToPath
+    });
+
+  elems.enter().append('path')
+    .attr({
+      'class': cssClass,
+      d: convertBezierCurveToPath,
+      'marker-end': 'url(#arrowhead)'
+    });
+
+  elems.exit().remove();
+}
+
+function calculateIntersection() {
+  var t;
   var d = curves[0].points[3];
   var lastHandleCurve = new EllipticArc(d.x, d.y, lastHandleRadius, lastHandleRadius, 0, 0, 360);
   var bezierCurve = BezierCurve.fromPoints(curves[0].points);
@@ -171,11 +214,12 @@ function calculateIntersection() {
   });
 
   var intersectionsAndParameters = CurveSegment.getIntersectionsAndParameters(curvesSegments[0], curvesSegments[1]);
-  console.log('intersectionsAndParameters', intersectionsAndParameters);
-  var intersections = intersectionsAndParameters.map(function (intersectionAndParameters) {
-    return intersectionAndParameters[0];
-  });
-  drawPoints(intersectionLayer, intersections, 'intersection', intersectionRadius);
+  if (intersectionsAndParameters.length > 0) {
+    t = intersectionsAndParameters[0][1][0];
+  }
+
+  var newCurve = bezierCurve.getCurveFromZeroToT(t);
+  drawCutCurve(intersectionLayer, newCurve, 'cut-curve');
 }
 
 calculateIntersection();
